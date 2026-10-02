@@ -1,0 +1,14 @@
+# pip-only dependencies for camera mode of segmented_pc_publisher.
+# Install into a venv that can see the system ROS packages:
+#   python3 -m venv --system-site-packages ~/venvs/perception
+#   source ~/venvs/perception/bin/activate
+#   pip install -r requirements.txt
+# File mode only needs the ROS dependencies in package.xml.
+
+# Keep numpy 1.x: the apt-installed cv_bridge is built against numpy 1.26
+numpy<2
+# colcon-core requires setuptools<80
+setuptools<80
+torch>=2.5.1
+open3d>=0.19
+SAM-2 @ git+https://github.com/facebookresearch/sam2.git
