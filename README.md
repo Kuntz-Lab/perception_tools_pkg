@@ -8,7 +8,7 @@ Publishes a segmented point cloud on `/<cloud-name>_pointcloud` (default `/tissu
 It has two modes:
 
 - **camera** (default): subscribes to RGB, aligned depth, and camera info topics. You draw a bounding box once, SAM 2.1 segments every frame using that box, and the masked depth is published as a point cloud with the image's timestamp and frame.
-- **file**: publishes an Nx3 `.npy` point cloud at a fixed rate, for testing without a camera. By default it publishes the bundled dummy cloud ([data/dummy_cloud.npy](data/dummy_cloud.npy)) in `camera_color_optical_frame`.
+- **file**: publishes an Nx3 `.npy` point cloud at a fixed rate, for testing without a camera. By default it publishes a real tissue cloud ([data/g30_tissue_cloud.npy](data/g30_tissue_cloud.npy)) in `camera_color_optical_frame`. That cloud is a snapshot of `/tissue_pointcloud` from the g30 recording. `data/` also has a matching `/context_pointcloud` snapshot (`g30_context_cloud.npy`) and a synthetic `dummy_cloud.npy`.
 
 ### Setup
 
@@ -40,7 +40,7 @@ source ~/venvs/perception/bin/activate
 # Camera mode
 ros2 run perception_tools_pkg segmented_pc_publisher --sam-checkpoint ~/weight_downloads/sam2/sam2.1_hiera_large.pt
 
-# File mode (dummy cloud)
+# File mode (g30 tissue cloud; use --file for another .npy)
 ros2 run perception_tools_pkg segmented_pc_publisher --mode file
 ```
 
@@ -53,3 +53,22 @@ ros2 run tf2_ros static_transform_publisher --frame-id world --child-frame-id ca
 ```
 
 To regenerate the dummy cloud, run `python3 scripts/make_dummy_cloud.py`.
+
+## Camera to PSM1 calibration
+
+`interactive_tf_publisher` publishes a static transform from `PSM1_base_link` (parent) to `camera_color_optical_frame` (child). It starts at identity, and you adjust it from the keyboard while watching the result in RViz:
+
+```bash
+ros2 run perception_tools_pkg interactive_tf_publisher   # press h for the key list
+```
+
+- Translation keys move along the parent's axes, and rotation keys rotate about the child's own axes.
+- Use `--parent-frame` and `--child-frame` to calibrate different frames.
+- Use `--x ... --qw` to start from an earlier result.
+- Nothing else may publish a parent for the child frame. For example, run the RealSense driver with `publish_tf:=false`.
+
+When you press Ctrl-C, the node prints a `CAMERA_TF = {...}` block. Paste it over the block in [launch/pc_with_camera_tf.launch.py](launch/pc_with_camera_tf.launch.py) and rebuild, unless you built with `--symlink-install`. The launch file then publishes that transform with the standard `static_transform_publisher`, along with the point cloud publisher in file mode:
+
+```bash
+ros2 launch perception_tools_pkg pc_with_camera_tf.launch.py
+```

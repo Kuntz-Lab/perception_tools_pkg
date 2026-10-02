@@ -194,7 +194,7 @@ class FilePointCloudPublisher(Node):
 # MAIN
 # ===========================
 def parse_args(argv):
-    default_cloud_file = os.path.join(get_package_share_directory("perception_tools_pkg"), "data", "dummy_cloud.npy")
+    default_cloud_file = os.path.join(get_package_share_directory("perception_tools_pkg"), "data", "g30_tissue_cloud.npy")
 
     parser = argparse.ArgumentParser(description="Publish a SAM 2 segmented point cloud, or one loaded from file.")
     parser.add_argument("--mode", choices=["camera", "file"], default="camera",
@@ -211,7 +211,7 @@ def parse_args(argv):
     camera.add_argument("--sam-config", default=SAM2_MODEL_CONFIG)
 
     file_group = parser.add_argument_group("file mode")
-    file_group.add_argument("--file", default=default_cloud_file, help="Nx3 .npy point cloud (default: dummy cloud).")
+    file_group.add_argument("--file", default=default_cloud_file, help="Nx3 .npy point cloud (default: g30 tissue cloud).")
     file_group.add_argument("--frame-id", default="camera_color_optical_frame",
                             help="Frame of the loaded cloud (default matches the RealSense color optical frame).")
 
