@@ -3,6 +3,8 @@
 
 from launch import LaunchDescription
 from launch_ros.actions import Node
+from ament_index_python.packages import get_package_share_directory
+import os
 
 # ===== Paste the output of interactive_tf_publisher over this block =====
 CAMERA_TF = {
@@ -28,7 +30,13 @@ def generate_launch_description():
         Node(
             package='perception_tools_pkg',
             executable='segmented_pc_publisher',
-            arguments=['--mode', 'file'],
+            arguments=['--mode', 'file', '--file', os.path.join(get_package_share_directory("perception_tools_pkg"), "data", "g30_tissue_cloud.npy")],
+            output='screen',
+        ),
+        Node(
+            package='perception_tools_pkg',
+            executable='segmented_pc_publisher',
+            arguments=['--mode', 'file', '--file', os.path.join(get_package_share_directory("perception_tools_pkg"), "data", "g30_context_cloud.npy"), '--cloud-name', 'context'],
             output='screen',
         ),
     ])
