@@ -19,7 +19,7 @@ from ament_index_python.packages import get_package_share_directory
 from cv_bridge import CvBridge
 from message_filters import ApproximateTimeSynchronizer, Subscriber
 from rclpy.node import Node
-from rclpy.qos import qos_profile_sensor_data
+from rclpy.qos import HistoryPolicy, QoSProfile, ReliabilityPolicy, qos_profile_sensor_data
 from rclpy.utilities import remove_ros_args
 from sensor_msgs.msg import CameraInfo, Image, PointCloud2
 
@@ -28,16 +28,16 @@ from perception_tools_pkg.utils.ros_utils import numpy_to_pointcloud2
 
 # Path to the SAM 2.1 Large checkpoint (sam2.1_hiera_large.pt). Left blank until the weights are downloaded;
 # can also be passed with --sam-checkpoint.
-SAM2_CHECKPOINT_PATH = ""
+SAM2_CHECKPOINT_PATH = "/home/britton/model_weights/sam2.1_hiera_large.pt"
 SAM2_MODEL_CONFIG = "configs/sam2.1/sam2.1_hiera_l.yaml"
 
 
 class PointCloudPublisher(Node):
     def __init__(self,
                  cloud_name="tissue",
-                 image_topic_name="/camera/camera/color/image_raw",
-                 depth_topic_name="/camera/camera/aligned_depth_to_color/image_raw",
-                 camera_info_topic_name="/camera/camera/aligned_depth_to_color/camera_info",
+                 image_topic_name="/front/camera/color/image_raw",
+                 depth_topic_name="/front/camera/aligned_depth_to_color/image_raw",
+                 camera_info_topic_name="/front/camera/aligned_depth_to_color/camera_info",
                  sam_checkpoint_path=SAM2_CHECKPOINT_PATH,
                  sam_model_config=SAM2_MODEL_CONFIG,
                  publish_rate=100.0,
@@ -77,8 +77,11 @@ class PointCloudPublisher(Node):
         # ROS I/O
         self.camera_info_sub = self.create_subscription(
             CameraInfo, camera_info_topic_name, self.camera_info_callback, qos_profile_sensor_data)
-        self.image_sub = Subscriber(self, Image, image_topic_name, qos_profile=qos_profile_sensor_data)
-        self.depth_sub = Subscriber(self, Image, depth_topic_name, qos_profile=qos_profile_sensor_data)
+        # RELIABLE, not sensor-data BEST_EFFORT: large image messages lose fragments in transit, and best effort
+        # drops the whole frame (aligned depth arrived at ~0.2 Hz). A short history keeps frames from going stale.
+        image_qos = QoSProfile(history=HistoryPolicy.KEEP_LAST, depth=2, reliability=ReliabilityPolicy.RELIABLE)
+        self.image_sub = Subscriber(self, Image, image_topic_name, qos_profile=image_qos)
+        self.depth_sub = Subscriber(self, Image, depth_topic_name, qos_profile=image_qos)
         self.sync = ApproximateTimeSynchronizer([self.image_sub, self.depth_sub], queue_size=queue_size, slop=0.05)
         self.sync.registerCallback(self.image_depth_callback)
         self.point_cloud_pub = self.create_publisher(PointCloud2, self.topic_name, queue_size)
@@ -118,7 +121,9 @@ class PointCloudPublisher(Node):
         self.cur_stamp = image_msg.header.stamp
         self.frame_id = image_msg.header.frame_id
         self.cur_img = self.bridge.imgmsg_to_cv2(image_msg, desired_encoding="rgb8")
-        self.cur_depth = self.bridge.imgmsg_to_cv2(depth_msg, desired_encoding="passthrough")
+        depth = self.bridge.imgmsg_to_cv2(depth_msg, desired_encoding="passthrough")
+        # cv_bridge tags the dtype with an explicit byte order ('<u2'), which Open3D's Image rejects; make it native
+        self.cur_depth = depth.astype(depth.dtype.newbyteorder("="))
         self.has_new_frame = True
 
     # ===========================
@@ -204,9 +209,9 @@ def parse_args(argv):
                         help="Publish timer rate in Hz (default: 100 for camera, 10 for file).")
 
     camera = parser.add_argument_group("camera mode")
-    camera.add_argument("--image-topic", default="/camera/camera/color/image_raw")
-    camera.add_argument("--depth-topic", default="/camera/camera/aligned_depth_to_color/image_raw")
-    camera.add_argument("--camera-info-topic", default="/camera/camera/aligned_depth_to_color/camera_info")
+    camera.add_argument("--image-topic", default="/front/camera/color/image_raw")
+    camera.add_argument("--depth-topic", default="/front/camera/aligned_depth_to_color/image_raw")
+    camera.add_argument("--camera-info-topic", default="/front/camera/aligned_depth_to_color/camera_info")
     camera.add_argument("--sam-checkpoint", default=SAM2_CHECKPOINT_PATH)
     camera.add_argument("--sam-config", default=SAM2_MODEL_CONFIG)
 
