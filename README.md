@@ -20,7 +20,7 @@ source ~/venvs/perception/bin/activate
 pip install -r requirements.txt
 ```
 
-Download the SAM 2.1 Large checkpoint ([sam2.1_hiera_large.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_large.pt)), e.g. to `~/weight_downloads/sam2/`. Then either set `SAM2_CHECKPOINT_PATH` in the node or pass `--sam-checkpoint`.
+Download the SAM 2.1 Large checkpoint ([sam2.1_hiera_large.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_large.pt)), e.g. to `~/model_weights/sam2/`. Then either set `SAM2_CHECKPOINT_PATH` in the node or pass `--sam-checkpoint`.
 
 Build with the venv active:
 
