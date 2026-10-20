@@ -165,7 +165,7 @@ class InteractiveTfPublisher(Node):
 def parse_args(argv):
     parser = argparse.ArgumentParser(description="Hand-tune a static transform with the keyboard.")
     parser.add_argument("--parent-frame", default="PSM1_base_link")
-    parser.add_argument("--child-frame", default="camera_color_optical_frame")
+    parser.add_argument("--child-frame", default="camera_link")
     parser.add_argument("--x", type=float, default=0.0)
     parser.add_argument("--y", type=float, default=0.0)
     parser.add_argument("--z", type=float, default=0.0)
