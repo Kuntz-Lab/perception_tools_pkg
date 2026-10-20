@@ -36,14 +36,14 @@ def generate_launch_description():
         ),
         Node(
             package='perception_tools_pkg',
-            executable='segmented_pc_publisher',
-            arguments=[],
+            executable='live_stream_video_pc_publisher',
+            arguments=["--cloud-name", "tissue"],
             output='screen',
         ),
-        # Node(
-        #     package='perception_tools_pkg',
-        #     executable='segmented_pc_publisher',
-        #     arguments=['--mode', 'file', '--file', os.path.join(get_package_share_directory("perception_tools_pkg"), "data", "g30_context_cloud.npy"), '--cloud-name', 'context'],
-        #     output='screen',
-        # ),
+        Node(
+            package='perception_tools_pkg',
+            executable='live_stream_video_pc_publisher',
+            arguments=["--cloud-name", "context"],
+            output='screen',
+        )
     ])

@@ -20,7 +20,11 @@ source ~/venvs/perception/bin/activate
 pip install -r requirements.txt
 ```
 
-Download the SAM 2.1 Large checkpoint ([sam2.1_hiera_large.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_large.pt)), e.g. to `~/model_weights/sam2/`. Then either set `SAM2_CHECKPOINT_PATH` in the node or pass `--sam-checkpoint`.
+Download the SAM 2.1 checkpoints ([sam2.1_hiera_large.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_large.pt), [sam2.1_hiera_small.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_small.pt)) to `~/model_weights/sam2/`. All SAM 2 nodes read them from there:
+
+- `--sam-model large|small` picks the model (default `large`).
+- To keep the weights somewhere else, change `SAM2_WEIGHTS_DIR` in [perception_tools_pkg/utils/sam2_utils.py](perception_tools_pkg/utils/sam2_utils.py) or set the `SAM2_WEIGHTS_DIR` environment variable.
+- `--sam-checkpoint` / `--sam-config` override the file for a single run.
 
 Build with the venv active:
 
@@ -38,7 +42,7 @@ Always activate the venv first. The node runs with whichever `python3` is first 
 source ~/venvs/perception/bin/activate
 
 # Camera mode
-ros2 run perception_tools_pkg segmented_pc_publisher --sam-checkpoint ~/weight_downloads/sam2/sam2.1_hiera_large.pt
+ros2 run perception_tools_pkg segmented_pc_publisher
 
 # File mode (g30 tissue cloud; use --file for another .npy)
 ros2 run perception_tools_pkg segmented_pc_publisher --mode file
@@ -53,6 +57,26 @@ ros2 run tf2_ros static_transform_publisher --frame-id world --child-frame-id ca
 ```
 
 To regenerate the dummy cloud, run `python3 scripts/make_dummy_cloud.py`.
+
+## live_stream_video_pc_publisher
+
+Tracks an object with SAM 2 video segmentation, so it stays segmented wherever it moves in the frame. Draw a bounding box once at startup. It uses the same topics and setup as `segmented_pc_publisher` camera mode.
+
+```bash
+source ~/venvs/perception/bin/activate
+ros2 run perception_tools_pkg live_stream_video_pc_publisher  # SAM 2.1 Large (default)
+ros2 run perception_tools_pkg live_stream_video_pc_publisher --sam-model small  # faster
+
+# Redraw the box mid-stream (tracking restarts from the new box)
+ros2 service call /live_stream_video_pc_publisher/reprompt std_srvs/srv/Trigger
+```
+
+It publishes two topics:
+
+- `/tissue_pointcloud`: the segmented point cloud. It is empty while the object is out of view.
+- `/tissue_tracking_overlay`: the image with the mask drawn on it, for debugging.
+
+Both carry the source RGB image's stamp, so `ros2 topic delay /tissue_pointcloud` shows the latency. Use `--cloud-name` to change the topic prefix and `--help` for all options.
 
 ## Camera to PSM1 calibration
 

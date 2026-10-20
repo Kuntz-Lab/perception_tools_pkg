@@ -3,7 +3,7 @@
 #
 # Camera mode (default): segments the RGB image with SAM 2 using a bounding box selected once
 # by the user, masks the aligned depth image, and publishes the resulting point cloud.
-#   ros2 run perception_tools_pkg segmented_pc_publisher --sam-checkpoint /path/to/sam2.1_hiera_large.pt
+#   ros2 run perception_tools_pkg segmented_pc_publisher [--sam-model small]
 #
 # File mode: publishes an Nx3 point cloud loaded from a .npy file, for testing without a camera.
 #   ros2 run perception_tools_pkg segmented_pc_publisher --mode file
@@ -25,21 +25,17 @@ from sensor_msgs.msg import CameraInfo, Image, PointCloud2
 
 from perception_tools_pkg.utils.miscellaneous_utils import get_bb
 from perception_tools_pkg.utils.ros_utils import numpy_to_pointcloud2
-
-# Path to the SAM 2.1 Large checkpoint (sam2.1_hiera_large.pt). Left blank until the weights are downloaded;
-# can also be passed with --sam-checkpoint.
-SAM2_CHECKPOINT_PATH = "/home/britton/model_weights/sam2.1_hiera_large.pt"
-SAM2_MODEL_CONFIG = "configs/sam2.1/sam2.1_hiera_l.yaml"
+from perception_tools_pkg.utils.sam2_utils import add_sam2_args, resolve_sam2_model
 
 
 class PointCloudPublisher(Node):
     def __init__(self,
+                 sam_checkpoint_path,
+                 sam_model_config,
                  cloud_name="tissue",
                  image_topic_name="/front/camera/color/image_raw",
                  depth_topic_name="/front/camera/aligned_depth_to_color/image_raw",
                  camera_info_topic_name="/front/camera/aligned_depth_to_color/camera_info",
-                 sam_checkpoint_path=SAM2_CHECKPOINT_PATH,
-                 sam_model_config=SAM2_MODEL_CONFIG,
                  publish_rate=100.0,
                  queue_size=10):
         super().__init__("pc_publisher")
@@ -47,8 +43,6 @@ class PointCloudPublisher(Node):
         self.get_logger().info(f"Using depth topic: {depth_topic_name}")
 
         # === Config & model setup ===
-        if not sam_checkpoint_path:
-            raise ValueError("No SAM 2 checkpoint given. Set SAM2_CHECKPOINT_PATH or pass --sam-checkpoint.")
         if not os.path.isfile(sam_checkpoint_path):
             raise FileNotFoundError(f"SAM 2 checkpoint not found: {sam_checkpoint_path}")
 
@@ -212,8 +206,8 @@ def parse_args(argv):
     camera.add_argument("--image-topic", default="/front/camera/color/image_raw")
     camera.add_argument("--depth-topic", default="/front/camera/aligned_depth_to_color/image_raw")
     camera.add_argument("--camera-info-topic", default="/front/camera/aligned_depth_to_color/camera_info")
-    camera.add_argument("--sam-checkpoint", default=SAM2_CHECKPOINT_PATH)
-    camera.add_argument("--sam-config", default=SAM2_MODEL_CONFIG)
+
+    add_sam2_args(parser)
 
     file_group = parser.add_argument_group("file mode")
     file_group.add_argument("--file", default=default_cloud_file, help="Nx3 .npy point cloud (default: g30 tissue cloud).")
@@ -228,13 +222,14 @@ def main(args=None):
     cli_args = parse_args(remove_ros_args(args if args is not None else sys.argv)[1:])
 
     if cli_args.mode == "camera":
+        sam_checkpoint_path, sam_model_config = resolve_sam2_model(cli_args)
         node = PointCloudPublisher(
+            sam_checkpoint_path=sam_checkpoint_path,
+            sam_model_config=sam_model_config,
             cloud_name=cli_args.cloud_name,
             image_topic_name=cli_args.image_topic,
             depth_topic_name=cli_args.depth_topic,
             camera_info_topic_name=cli_args.camera_info_topic,
-            sam_checkpoint_path=cli_args.sam_checkpoint,
-            sam_model_config=cli_args.sam_config,
             publish_rate=cli_args.rate or 100.0,
         )
     else:

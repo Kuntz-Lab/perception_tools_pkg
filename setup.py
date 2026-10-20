@@ -30,6 +30,7 @@ setup(
         'console_scripts': [
             'segmented_pc_publisher = perception_tools_pkg.segmented_pc_publisher:main',
             'interactive_tf_publisher = perception_tools_pkg.interactive_tf_publisher:main',
+            'live_stream_video_pc_publisher = perception_tools_pkg.live_stream_video_pc_publisher:main',
         ],
     },
 )
