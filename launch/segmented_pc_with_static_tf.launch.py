@@ -37,13 +37,7 @@ def generate_launch_description():
         Node(
             package='perception_tools_pkg',
             executable='live_stream_video_pc_publisher',
-            arguments=["--cloud-name", "tissue"],
+            arguments=['--cloud-topics', '/tissue_pointcloud', '/context_pointcloud', '/airpod_case_pointcloud'],
             output='screen',
         ),
-        Node(
-            package='perception_tools_pkg',
-            executable='live_stream_video_pc_publisher',
-            arguments=["--cloud-name", "context"],
-            output='screen',
-        )
     ])

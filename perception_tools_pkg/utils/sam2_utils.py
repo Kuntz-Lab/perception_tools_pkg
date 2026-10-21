@@ -14,8 +14,8 @@ SAM2_MODELS = {
 def add_sam2_args(parser):
     """Add the --sam-model, --sam-checkpoint and --sam-config options to an argparse parser."""
     group = parser.add_argument_group("SAM 2 model")
-    group.add_argument("--sam-model", choices=SAM2_MODELS, default="large",
-                       help=f"SAM 2.1 model size, loaded from {SAM2_WEIGHTS_DIR} (default: large).")
+    group.add_argument("--sam-model", choices=SAM2_MODELS, default="small",
+                       help=f"SAM 2.1 model size, loaded from {SAM2_WEIGHTS_DIR} (default: small).")
     group.add_argument("--sam-checkpoint", default=None,
                        help="Checkpoint file, overriding the one chosen by --sam-model.")
     group.add_argument("--sam-config", default=None,

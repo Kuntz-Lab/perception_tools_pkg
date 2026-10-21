@@ -3,7 +3,7 @@
 #
 # Camera mode (default): segments the RGB image with SAM 2 using a bounding box selected once
 # by the user, masks the aligned depth image, and publishes the resulting point cloud.
-#   ros2 run perception_tools_pkg segmented_pc_publisher [--sam-model small]
+#   ros2 run perception_tools_pkg segmented_pc_publisher [--sam-model large]
 #
 # File mode: publishes an Nx3 point cloud loaded from a .npy file, for testing without a camera.
 #   ros2 run perception_tools_pkg segmented_pc_publisher --mode file

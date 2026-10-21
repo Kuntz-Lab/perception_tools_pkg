@@ -22,7 +22,7 @@ pip install -r requirements.txt
 
 Download the SAM 2.1 checkpoints ([sam2.1_hiera_large.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_large.pt), [sam2.1_hiera_small.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_small.pt)) to `~/model_weights/sam2/`. All SAM 2 nodes read them from there:
 
-- `--sam-model large|small` picks the model (default `large`).
+- `--sam-model small|large` picks the model (default `small`).
 - To keep the weights somewhere else, change `SAM2_WEIGHTS_DIR` in [perception_tools_pkg/utils/sam2_utils.py](perception_tools_pkg/utils/sam2_utils.py) or set the `SAM2_WEIGHTS_DIR` environment variable.
 - `--sam-checkpoint` / `--sam-config` override the file for a single run.
 
@@ -33,6 +33,20 @@ cd ~/dvrk_ws
 colcon build --packages-select perception_tools_pkg
 source install/setup.bash
 ```
+
+#### Recommended: large-data transport
+
+Set this in every terminal that runs ROS nodes, or add it to `~/.bashrc`:
+
+```bash
+export FASTDDS_BUILTIN_TRANSPORTS=LARGE_DATA
+```
+
+Restart the camera driver, RViz and these nodes after setting it.
+
+**Why:** these nodes subscribe to full-resolution camera images (2.7 MB color and 1.8 MB depth per frame at 30 Hz) and publish point clouds and a debug image. By default, Fast DDS (the default DDS in ROS 2 Jazzy) sends each large message as many UDP fragments through small kernel socket buffers (208 KB by default). When fragments are dropped, reliable topics resend them. That repair traffic is shared by every subscriber of a publisher, so adding subscribers or large topics makes all image streams lag, including ones these nodes don't use.
+
+In practice, viewing `/tracking_overlay` in RViz alongside the camera image made the plain image stream lag, and new subscribers such as `ros2 topic hz` received no frames at all. `LARGE_DATA` sends large messages over shared memory (same machine) and TCP instead, which fixed it. The variable must be set for both the publisher and the subscriber of a topic.
 
 ### Running
 
@@ -60,23 +74,29 @@ To regenerate the dummy cloud, run `python3 scripts/make_dummy_cloud.py`.
 
 ## live_stream_video_pc_publisher
 
-Tracks an object with SAM 2 video segmentation, so it stays segmented wherever it moves in the frame. Draw a bounding box once at startup. It uses the same topics and setup as `segmented_pc_publisher` camera mode.
+Tracks objects with SAM 2 video segmentation, so each one stays segmented wherever it moves in the frame. At startup you draw one bounding box per object. It uses the same camera topics and setup as `segmented_pc_publisher` camera mode.
 
 ```bash
 source ~/venvs/perception/bin/activate
-ros2 run perception_tools_pkg live_stream_video_pc_publisher  # SAM 2.1 Large (default)
-ros2 run perception_tools_pkg live_stream_video_pc_publisher --sam-model small  # faster
+ros2 run perception_tools_pkg live_stream_video_pc_publisher  # one object on /tissue_pointcloud, SAM 2.1 Small
+ros2 run perception_tools_pkg live_stream_video_pc_publisher --sam-model large  # more accurate, slower
 
-# Redraw the box mid-stream (tracking restarts from the new box)
+# One object per point cloud topic, named after the topic (tissue, context)
+ros2 run perception_tools_pkg live_stream_video_pc_publisher --cloud-topics /tissue_pointcloud /context_pointcloud
+
+# Redraw the boxes mid-stream (tracking restarts from the new boxes): all objects, or one by name
 ros2 service call /live_stream_video_pc_publisher/reprompt std_srvs/srv/Trigger
+ros2 service call /live_stream_video_pc_publisher/reprompt/context std_srvs/srv/Trigger
 ```
 
-It publishes two topics:
+It publishes:
 
-- `/tissue_pointcloud`: the segmented point cloud. It is empty while the object is out of view.
-- `/tissue_tracking_overlay`: the image with the mask drawn on it, for debugging.
+- one point cloud per object, on the topics given by `--cloud-topics`. A cloud is empty while its object is out of view.
+- `/tracking_overlay`: the image with every object's mask drawn on it, for debugging.
 
-Both carry the source RGB image's stamp, so `ros2 topic delay /tissue_pointcloud` shows the latency. Use `--cloud-name` to change the topic prefix and `--help` for all options.
+All messages carry the source RGB image's stamp, so `ros2 topic delay /tissue_pointcloud` shows the latency.
+
+Track several objects in one node rather than running several nodes, since the image encoder then runs once per frame for all objects. On an RTX 5090, SAM 2 takes ~29 ms per frame with Large and ~13 ms with Small for one object, plus ~7 ms for each additional object. Use `--help` for all options.
 
 ## Camera to PSM1 calibration
 
