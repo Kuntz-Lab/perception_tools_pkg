@@ -3,17 +3,7 @@ Panels:
     Help Height: 0
     Name: Displays
     Property Tree Widget:
-      Expanded:
-        - /Global Options1
-        - /Status1
-        - /Grid1
-        - /RobotModel1
-        - /tissue_pointcloud1
-        - /context_pointcloud1
-        - /front camera image1
-        - /segmentation overlay1
-        - /PSM11
-        - /Marker1
+      Expanded: ~
       Splitter Ratio: 0.5
     Tree Height: 233
   - Class: rviz_common/Selection
@@ -316,10 +306,9 @@ Visualization Manager:
       Value: true
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
-      Name: MarkerArray
+      Name: wrist trajectory
       Namespaces:
-        pushvibes_trajectory: true
-        pushvibes_trajectory_history: true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -336,7 +325,7 @@ Visualization Manager:
       Value: true
     - Class: rviz_default_plugins/Marker
       Enabled: true
-      Name: Marker
+      Name: table
       Namespaces:
         table_plane: true
       Topic:
@@ -347,6 +336,32 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /table_plane_marker
       Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: true
+      Name: workspace walls
+      Namespaces:
+        workspace_walls: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /workspace_walls_marker
+      Value: true
+    - Class: rviz_default_plugins/Marker
+      Enabled: false
+      Name: workspace top
+      Namespaces:
+        {}
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /workspace_top_marker
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -393,25 +408,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 0.42047154903411865
+      Distance: 0.7347204685211182
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.02862570434808731
-        Y: 0.052861835807561874
-        Z: 0.05950186401605606
+        X: -0.10706577450037003
+        Y: 0.12367264926433563
+        Z: -0.056594282388687134
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.005202812142670155
+      Pitch: -0.9897975921630859
       Target Frame: PSM1
       Value: Orbit (rviz_default_plugins)
-      Yaw: 6.273575305938721
+      Yaw: 4.733580112457275
     Saved:
       - Class: rviz_default_plugins/Orbit
         Distance: 1.0652830600738525
