@@ -29,7 +29,7 @@ Download the SAM 2.1 checkpoints ([sam2.1_hiera_large.pt](https://dl.fbaipublicf
 Build with the venv active:
 
 ```bash
-cd ~/dvrk_ws
+cd ~/retraction_ws
 colcon build --packages-select perception_tools_pkg
 source install/setup.bash
 ```
