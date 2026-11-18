@@ -322,7 +322,7 @@ Visualization Manager:
       Enabled: true
       Name: raw action
       Namespaces:
-        {}
+        pushvibes_raw_action: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -469,25 +469,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 0.06246216595172882
+      Distance: 0.07673937827348709
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.022867707535624504
-        Y: 0.02669338323175907
-        Z: 0.18119537830352783
+        X: -0.017419304698705673
+        Y: 0.021213797852396965
+        Z: 0.20378173887729645
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -1.36479651927948
+      Pitch: -0.8497975468635559
       Target Frame: camera_color_optical_frame
       Value: Orbit (rviz_default_plugins)
-      Yaw: 4.683557033538818
+      Yaw: 4.633560657501221
     Saved:
       - Class: rviz_default_plugins/Orbit
         Distance: 1.0652830600738525
