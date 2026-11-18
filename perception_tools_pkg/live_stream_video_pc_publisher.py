@@ -8,6 +8,7 @@
 # (e.g. `ros2 topic delay /tissue_pointcloud`).
 #   ros2 run perception_tools_pkg live_stream_video_pc_publisher [--sam-model large]
 #   ros2 run perception_tools_pkg live_stream_video_pc_publisher --cloud-topics /tissue_pointcloud /context_pointcloud
+#   ros2 run perception_tools_pkg live_stream_video_pc_publisher --camera-namespace /side/camera
 #
 # To redraw the boxes while running (e.g. if tracking drifts), for all objects or one object:
 #   ros2 service call /live_stream_video_pc_publisher/reprompt std_srvs/srv/Trigger
@@ -270,9 +271,9 @@ def parse_args(argv):
     parser.add_argument("--overlay-topic", default="/tracking_overlay",
                         help="Debug image of all objects' masks (default: /tracking_overlay).")
     parser.add_argument("--rate", type=float, default=100.0, help="Tracking timer rate in Hz (default: 100).")
-    parser.add_argument("--image-topic", default="/front/camera/color/image_raw")
-    parser.add_argument("--depth-topic", default="/front/camera/aligned_depth_to_color/image_raw")
-    parser.add_argument("--camera-info-topic", default="/front/camera/aligned_depth_to_color/camera_info")
+    parser.add_argument("--camera-namespace", default="/front/camera",
+                        help="Camera namespace (default: /front/camera). Subscribes to <ns>/color/image_raw, "
+                             "<ns>/aligned_depth_to_color/image_raw and <ns>/aligned_depth_to_color/camera_info.")
     add_sam2_args(parser)
     return parser.parse_args(argv)
 
@@ -281,15 +282,16 @@ def main(args=None):
     rclpy.init(args=args)
     cli_args = parse_args(remove_ros_args(args if args is not None else sys.argv)[1:])
     sam_checkpoint_path, sam_model_config = resolve_sam2_model(cli_args)
+    camera_ns = "/" + cli_args.camera_namespace.strip("/")
 
     node = LiveStreamVideoPointCloudPublisher(
         sam_checkpoint_path=sam_checkpoint_path,
         sam_model_config=sam_model_config,
         cloud_topics=cli_args.cloud_topics,
         overlay_topic_name=cli_args.overlay_topic,
-        image_topic_name=cli_args.image_topic,
-        depth_topic_name=cli_args.depth_topic,
-        camera_info_topic_name=cli_args.camera_info_topic,
+        image_topic_name=f"{camera_ns}/color/image_raw",
+        depth_topic_name=f"{camera_ns}/aligned_depth_to_color/image_raw",
+        camera_info_topic_name=f"{camera_ns}/aligned_depth_to_color/camera_info",
         publish_rate=cli_args.rate,
     )
 
